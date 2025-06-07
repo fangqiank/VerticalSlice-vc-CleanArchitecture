@@ -1,6 +1,4 @@
-﻿using VerticalSliceApp.Data;
-
-namespace VerticalSliceApp.Models
+﻿namespace CleanArchitectureApp.Models
 {
     public class Todo
     {

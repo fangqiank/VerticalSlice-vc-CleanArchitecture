@@ -1,7 +1,7 @@
 ﻿using Bogus;
-using VerticalSliceApp.Models;
+using CleanArchitectureApp.Models;
 
-namespace VerticalSliceApp.Data
+namespace CleanArchitectureApp.Data
 {
     public static class DataSeeder
     {
@@ -22,5 +22,3 @@ namespace VerticalSliceApp.Data
         }
     }
 }
-
-    
