@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using VerticalSliceApp.Data;
+﻿using MediatR;
+using VerticalSliceApp.Commands;
 using VerticalSliceApp.Models;
 
 namespace VerticalSliceApp
@@ -9,19 +9,12 @@ namespace VerticalSliceApp
         public static RouteGroupBuilder MapToggleTodoEndpoint(this RouteGroupBuilder group)
         {
             group.MapPut("/{id}/toggle", async (
-            [FromRoute] int id,
-            [FromServices] AppDbContext db) =>
+            int id, 
+            IMediator mediator) =>
             {
-                var todo = await db.Todos.FindAsync(id);
-                if (todo is null)
-                {
-                    return Results.NotFound();
-                }
-
-                todo.IsCompleted = !todo.IsCompleted;
-                await db.SaveChangesAsync();
-
-                return Results.Ok(todo);
+                var command = new ToggleTodoCommand(id);
+                var todo = await mediator.Send(command);
+                return todo != null ? Results.Ok(todo) : Results.NotFound();
             })
             .WithName("ToggleTodo")
             .Produces<Todo>(StatusCodes.Status200OK)

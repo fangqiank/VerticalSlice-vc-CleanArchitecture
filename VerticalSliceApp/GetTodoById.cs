@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using VerticalSliceApp.Data;
 using VerticalSliceApp.Models;
+using VerticalSliceApp.Queries;
 
 namespace VerticalSliceApp
 {
@@ -9,13 +11,12 @@ namespace VerticalSliceApp
         public static RouteGroupBuilder MapGetTodoByIdEndpoint(this RouteGroupBuilder group)
         {
             group.MapGet("/{id}", async (
-            [FromRoute] int id,
-            [FromServices] AppDbContext db) =>
+                int id, 
+                IMediator mediator) =>
             {
-                return await db.Todos.FindAsync(id)
-                    is Todo todo
-                        ? Results.Ok(todo)
-                        : Results.NotFound();
+                var query = new GetTodoByIdQuery(id);
+                var todo = await mediator.Send(query);
+                return todo != null ? Results.Ok(todo) : Results.NotFound();
             })
             .WithName("GetTodoById")
             .Produces<Todo>(StatusCodes.Status200OK)

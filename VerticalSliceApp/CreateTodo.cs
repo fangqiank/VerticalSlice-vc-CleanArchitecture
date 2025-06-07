@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
-using Microsoft.AspNetCore.Mvc;
-using VerticalSliceApp.Data;
+using MediatR;
+using VerticalSliceApp.Commands;
 using VerticalSliceApp.Models;
 
 namespace VerticalSliceApp
@@ -10,19 +10,11 @@ namespace VerticalSliceApp
         public static RouteGroupBuilder MapCreateTodoEndpoint(this RouteGroupBuilder group)
         {
             group.MapPost("/", async (
-                [FromBody] CreateTodoRequest request,
-                [FromServices] AppDbContext db) =>
+                CreateTodoCommand command, 
+                IMediator mediator) =>
             {
-                var todo = new Todo
-                {
-                    Title = request.Title,
-                    IsCompleted = false
-                };
-
-                db.Todos.Add(todo);
-                await db.SaveChangesAsync();
-
-                return Results.Created($"/todos/{todo.Id}", todo);
+                var todoId = await mediator.Send(command);
+                return Results.Created($"/todos/{todoId}", new { Id = todoId });
             })
             .WithName("CreateTodo")
             .Produces<Todo>(StatusCodes.Status201Created)
@@ -34,7 +26,5 @@ namespace VerticalSliceApp
 
             return group;
         }
-
-        public sealed record CreateTodoRequest(string Title);
     }
 }

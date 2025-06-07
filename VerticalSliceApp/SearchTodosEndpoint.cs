@@ -1,7 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using VerticalSliceApp.Data;
+﻿using MediatR;
 using VerticalSliceApp.Models;
+using VerticalSliceApp.Queries;
 
 namespace VerticalSliceApp
 {
@@ -10,25 +9,17 @@ namespace VerticalSliceApp
         public static RouteGroupBuilder MapSearchTodosEndpoint(this RouteGroupBuilder group)
         {
             group.MapGet("/search", async (
-                [FromQuery] string term,
-                [FromServices] AppDbContext db) =>
+               string term, 
+               IMediator mediator) =>
             {
                 if (string.IsNullOrWhiteSpace(term))
                 {
                     return Results.BadRequest("Search term is required");
                 }
 
-                var normalizedTerm = term.ToLower();
-
-                var results = await db.Todos
-                   .Where(t =>
-                       t.Title.ToLower().Contains(normalizedTerm) ||
-                       (t.Description != null && t.Description.ToLower().Contains(normalizedTerm)) ||
-                       t.Tags.Any(tag => tag.ToLower().Contains(normalizedTerm)))
-                   .OrderByDescending(t => t.CreatedAt)
-                   .ToListAsync();
-
-                return Results.Ok(results);
+                var query = new SearchTodosQuery(term);
+                var todos = await mediator.Send(query);
+                return Results.Ok(todos);
             })
             .WithName("SearchTodos")
             .Produces<List<Todo>>(StatusCodes.Status200OK)

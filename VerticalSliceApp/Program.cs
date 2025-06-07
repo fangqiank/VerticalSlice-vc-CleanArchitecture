@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 using VerticalSliceApp;
 using VerticalSliceApp.Data;
 
@@ -7,6 +8,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseInMemoryDatabase("TodoDB"));
@@ -27,7 +31,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.MapGroup("/api")
+app.MapGroup("/todos")
    .MapTodosEndpoints();
 
 app.UseHttpsRedirection();
@@ -44,5 +48,7 @@ static class EndpointRouteBuilderExtensions
         group.MapGetTodoByIdEndpoint();
         group.MapSearchTodosEndpoint();
         group.MapToggleTodoEndpoint();
+        group.MapUpdateTodoEndpoint();
+        group.MapDeleteTodoEndpoint();
     }
 }

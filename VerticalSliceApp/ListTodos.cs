@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VerticalSliceApp.Data;
 using VerticalSliceApp.Models;
+using VerticalSliceApp.Queries;
 
 namespace VerticalSliceApp
 {
@@ -10,31 +12,14 @@ namespace VerticalSliceApp
         public static RouteGroupBuilder MapListTodosEndpoint(this RouteGroupBuilder group)
         {
             group.MapGet("/", async (
-                [FromQuery] bool? completed,
-                [FromQuery] Priority? priority,
-                [FromQuery] string? tag,
-                [FromServices] AppDbContext db) =>
+                bool? completed,
+                Priority? priority,
+                string? tag,
+                IMediator mediator) =>
             {
-                IQueryable<Todo> query = db.Todos;
-
-                if (completed.HasValue)
-                {
-                    query = query.Where(t => t.IsCompleted == completed.Value);
-                }
-
-                if (priority.HasValue)
-                {
-                    query = query.Where(t => t.Priority == priority.Value);
-                }
-
-                if (!string.IsNullOrEmpty(tag))
-                {
-                    query = query.Where(t => t.Tags.Contains(tag));
-                }
-
-                return await query
-                    .OrderByDescending(t => t.CreatedAt)
-                    .ToListAsync();
+                var query = new GetTodosQuery(completed, priority, tag);
+                var todos = await mediator.Send(query);
+                return Results.Ok(todos);
             })
             .WithName("GetAllTodos")
             .Produces<List<Todo>>(StatusCodes.Status200OK)
